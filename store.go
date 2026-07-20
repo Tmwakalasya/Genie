@@ -1,6 +1,11 @@
 package main
 
-import "sync"
+import (
+	"errors"
+	"sync"
+)
+
+var ErrNotFound = errors.New("Resource not found")
 
 // Store is the in-memory, thread-safe home of all VM state.
 type Store struct {
@@ -48,4 +53,17 @@ func (s *Store) List(owner string) []VM {
 		}
 	}
 	return results
+}
+
+func (s *Store) Update(id uint, state State) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	vm, ok := s.vms[id]
+	if !ok {
+		return ErrNotFound
+	}
+	vm.State = state
+	s.vms[id] = vm
+	return nil
+
 }
